@@ -18,10 +18,27 @@
 #include "tier4_autoware_utils/geometry/geometry.hpp"
 
 void GyroBiasModule::update_bias(
-  const std::vector<geometry_msgs::msg::PoseStamped> & pose_list,
+  const geometry_msgs::msg::PoseStamped & pose_0,
+  const geometry_msgs::msg::PoseStamped & pose_1,
   const std::vector<geometry_msgs::msg::Vector3Stamped> & gyro_list, const double dt)
 {
-  const auto error_rpy = calculate_error_rpy(pose_list, gyro_list, geometry_msgs::msg::Vector3{});
+  // //////////////////
+  // double pose_time = (rclcpp::Time(pose_list.back().header.stamp) - rclcpp::Time(pose_list.front().header.stamp)).seconds();
+  // double gyro_time = (rclcpp::Time(gyro_list.back().header.stamp) - rclcpp::Time(gyro_list.front().header.stamp)).seconds();
+  // std::cout << "KOJI time factor: " << pose_time << " / " << gyro_time << " = " << pose_time / gyro_time << std::endl;
+  // //////////////////
+
+  // const auto error_rpy = calculate_error_rpy(pose_list, gyro_list, geometry_msgs::msg::Vector3{});
+  const geometry_msgs::msg::Vector3 d_rpy = integrate_orientation(gyro_list, geometry_msgs::msg::Vector3{});
+
+  const geometry_msgs::msg::Vector3 rpy_0 =
+    tier4_autoware_utils::getRPY(pose_0.pose.orientation);
+  const geometry_msgs::msg::Vector3 rpy_1 =
+    tier4_autoware_utils::getRPY(pose_1.pose.orientation);
+  const geometry_msgs::msg::Vector3 error_rpy = tier4_autoware_utils::createVector3(
+    clip_radian(-rpy_1.x + rpy_0.x + d_rpy.x), clip_radian(-rpy_1.y + rpy_0.y + d_rpy.y),
+    clip_radian(-rpy_1.z + rpy_0.z + d_rpy.z));
+
   gyro_bias_pair_.first.x += dt * error_rpy.x;
   gyro_bias_pair_.first.y += dt * error_rpy.y;
   gyro_bias_pair_.first.z += dt * error_rpy.z;

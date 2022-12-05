@@ -121,19 +121,47 @@ geometry_msgs::msg::Point integrate_position(
 }
 
 geometry_msgs::msg::Vector3 calculate_error_rpy(
-  const std::vector<geometry_msgs::msg::PoseStamped> & pose_list,
+  const geometry_msgs::msg::PoseStamped & pose0,
+  const geometry_msgs::msg::PoseStamped & pose1,
   const std::vector<geometry_msgs::msg::Vector3Stamped> & gyro_list,
   const geometry_msgs::msg::Vector3 & gyro_bias)
 {
   const geometry_msgs::msg::Vector3 rpy_0 =
-    tier4_autoware_utils::getRPY(pose_list.front().pose.orientation);
+    tier4_autoware_utils::getRPY(pose0.pose.orientation);
   const geometry_msgs::msg::Vector3 rpy_1 =
-    tier4_autoware_utils::getRPY(pose_list.back().pose.orientation);
+    tier4_autoware_utils::getRPY(pose1.pose.orientation);
   const geometry_msgs::msg::Vector3 d_rpy = integrate_orientation(gyro_list, gyro_bias);
 
+  // geometry_msgs::msg::Vector3 error_rpy = tier4_autoware_utils::createVector3(
+  //   clip_radian(-rpy_1.x + rpy_0.x + d_rpy.x), clip_radian(-rpy_1.y + rpy_0.y + d_rpy.y),
+  //   clip_radian(-rpy_1.z + rpy_0.z + d_rpy.z));
+
+  // static std::vector<double> hogehoge;
+  // if (gyro_bias.x != 0) {
+  //   double pose_time = (rclcpp::Time(pose_list.back().header.stamp) - rclcpp::Time(pose_list.front().header.stamp)).seconds();
+  //   double gyro_time = (rclcpp::Time(gyro_list.back().header.stamp) - rclcpp::Time(gyro_list.front().header.stamp)).seconds();
+  //   std::cout << "KOJI time factor: " << pose_time << " / " << gyro_time << " = " << pose_time / gyro_time << std::endl;
+
+  //   // d_rpy.x *= pose_time / gyro_time;
+  //   // d_rpy.y *= pose_time / gyro_time;
+  //   // d_rpy.z *= pose_time / gyro_time;
+
+  //   double hogecand = (rpy_1.z - rpy_0.z) / d_rpy.z;
+  //   if ((0.5 < hogecand) & (hogecand < 1.5)){
+  //     hogehoge.push_back((rpy_1.z - rpy_0.z) / d_rpy.z);
+  //   }  
+  //   double hogehogehoge = 0;
+  //   for (const auto hoge: hogehoge) hogehogehoge += hoge;
+  //   std::cout << "KOJI data size: " << hogehoge.size() << " " << hogehogehoge/hogehoge.size() << std::endl;
+  //   std::cout << "KOJI GYRO DIF yaw: " << rpy_1.z - rpy_0.z << " - " << d_rpy.z << ", rate = " << (rpy_1.z - rpy_0.z) / d_rpy.z << std::endl;
+
+  //   //////////////////
+  //   //////////////////
+  // } else {hogehoge.clear();}
   geometry_msgs::msg::Vector3 error_rpy = tier4_autoware_utils::createVector3(
     clip_radian(-rpy_1.x + rpy_0.x + d_rpy.x), clip_radian(-rpy_1.y + rpy_0.y + d_rpy.y),
     clip_radian(-rpy_1.z + rpy_0.z + d_rpy.z));
+
   return error_rpy;
 }
 

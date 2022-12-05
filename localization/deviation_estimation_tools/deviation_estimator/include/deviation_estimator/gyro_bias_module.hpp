@@ -25,7 +25,8 @@ class GyroBiasModule
 public:
   GyroBiasModule() = default;
   void update_bias(
-    const std::vector<geometry_msgs::msg::PoseStamped> & pose_list,
+    const geometry_msgs::msg::PoseStamped & pose_0,
+    const geometry_msgs::msg::PoseStamped & pose_1,
     const std::vector<geometry_msgs::msg::Vector3Stamped> & gyro_list, const double dt);
   geometry_msgs::msg::Vector3 get_bias_base_link() const;
   geometry_msgs::msg::Vector3 get_bias_std() const;

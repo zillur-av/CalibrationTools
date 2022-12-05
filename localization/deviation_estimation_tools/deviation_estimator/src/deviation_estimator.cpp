@@ -49,21 +49,50 @@ geometry_msgs::msg::Vector3 estimate_stddev_angular_velocity(
   for (int i = 0; i < (t_pose_end - t_pose_start).seconds() / duration.seconds() - 1; ++i) {
     const rclcpp::Time t0_rclcpp_time = t_pose_start + duration * i;
     const rclcpp::Time t1_rclcpp_time = t_pose_start + duration * (i + 1);
-    const std::vector<geometry_msgs::msg::PoseStamped> pose_sub_traj =
+    const std::vector<geometry_msgs::msg::PoseStamped> pose_sub_list =
       extract_sub_trajectory(pose_list, t0_rclcpp_time, t1_rclcpp_time);
 
-    const auto t1_pose = rclcpp::Time(pose_sub_traj.back().header.stamp);
-    const auto t0_pose = rclcpp::Time(pose_sub_traj.front().header.stamp);
-    if (t0_pose > t1_pose) continue;
+    // const auto t1_pose = rclcpp::Time(pose_sub_traj.back().header.stamp);
+    // const auto t0_pose = rclcpp::Time(pose_sub_traj.front().header.stamp);
+    // if (t0_pose > t1_pose) continue;
 
-    const std::vector<geometry_msgs::msg::Vector3Stamped> gyro_sub_traj =
-      extract_sub_trajectory(gyro_list, t0_pose, t1_pose);
-    const size_t n_twist = gyro_sub_traj.size();
+    // const std::vector<geometry_msgs::msg::Vector3Stamped> gyro_sub_traj =
+    //   extract_sub_trajectory(gyro_list, t0_pose, t1_pose);
+    Subtrajectory<geometry_msgs::msg::Vector3Stamped> sub_traj;
+    try {
+      sub_traj = extract_synchronized_pose_and_twist(pose_sub_list, gyro_list);
+    } catch (const std::domain_error & e){
+      continue;
+    }
+    const size_t n_twist = sub_traj.twist_list.size();
 
-    const auto error_rpy = calculate_error_rpy(pose_sub_traj, gyro_sub_traj, gyro_bias);
+    /////////////////////////////// KOJI
+    if (get_mean_abs_wz(sub_traj.twist_list) < 0.1) continue;
+    /////////////////////////////// KOJI
+    // //////////////////
+    // double pose_time = (rclcpp::Time(pose_sub_traj.back().header.stamp) - rclcpp::Time(pose_sub_traj.front().header.stamp)).seconds();
+    // double gyro_time = (rclcpp::Time(gyro_sub_traj.back().header.stamp) - rclcpp::Time(gyro_sub_traj.front().header.stamp)).seconds();
+    // std::cout << "KOJI time factor: " << pose_time << " / " << gyro_time << " = " << pose_time / gyro_time << std::endl;
+    // //////////////////
+    // const auto error_rpy = calculate_error_rpy(pose_sub_traj, gyro_sub_traj, gyro_bias);
+    // const geometry_msgs::msg::PoseStamped pose_0 = pose_sub_traj.front();
+    // const geometry_msgs::msg::PoseStamped pose_1 = pose_sub_traj.back();
+
+    const geometry_msgs::msg::Vector3 d_rpy = integrate_orientation(sub_traj.twist_list, gyro_bias);
+
+    const geometry_msgs::msg::Vector3 rpy_0 =
+      tier4_autoware_utils::getRPY(sub_traj.pose_start.pose.orientation);
+    const geometry_msgs::msg::Vector3 rpy_1 =
+      tier4_autoware_utils::getRPY(sub_traj.pose_end.pose.orientation);
+    const geometry_msgs::msg::Vector3 error_rpy = tier4_autoware_utils::createVector3(
+      clip_radian(-rpy_1.x + rpy_0.x + d_rpy.x), clip_radian(-rpy_1.y + rpy_0.y + d_rpy.y),
+      clip_radian(-rpy_1.z + rpy_0.z + d_rpy.z));
     delta_wx_list.push_back(std::sqrt(n_twist / t_window) * error_rpy.x);
     delta_wy_list.push_back(std::sqrt(n_twist / t_window) * error_rpy.y);
     delta_wz_list.push_back(std::sqrt(n_twist / t_window) * error_rpy.z);
+    // delta_wx_list.push_back(std::sqrt(n_twist / t_window) * error_rpy.x * gyro_time / pose_time);
+    // delta_wy_list.push_back(std::sqrt(n_twist / t_window) * error_rpy.y * gyro_time / pose_time);
+    // delta_wz_list.push_back(std::sqrt(n_twist / t_window) * error_rpy.z * gyro_time / pose_time);
   }
 
   geometry_msgs::msg::Vector3 stddev_angvel_base = tier4_autoware_utils::createVector3(
@@ -87,26 +116,28 @@ double estimate_stddev_velocity(
   for (int i = 0; i < (t_pose_end - t_pose_start).seconds() / duration.seconds() - 1; ++i) {
     const rclcpp::Time t0_rclcpp_time = t_pose_start + duration * i;
     const rclcpp::Time t1_rclcpp_time = t_pose_start + duration * (i + 1);
-    const std::vector<geometry_msgs::msg::PoseStamped> pose_sub_traj =
+    const std::vector<geometry_msgs::msg::PoseStamped> pose_sub_list =
       extract_sub_trajectory(pose_list, t0_rclcpp_time, t1_rclcpp_time);
 
-    const auto t1_pose = rclcpp::Time(pose_sub_traj.back().header.stamp);
-    const auto t0_pose = rclcpp::Time(pose_sub_traj.front().header.stamp);
-    if (t0_pose > t1_pose) continue;
+    // const auto t1_pose = rclcpp::Time(pose_sub_traj.back().header.stamp);
+    // const auto t0_pose = rclcpp::Time(pose_sub_traj.front().header.stamp);
+    // if (t0_pose > t1_pose) continue;
 
-    const std::vector<tier4_debug_msgs::msg::Float64Stamped> vx_sub_traj =
-      extract_sub_trajectory(vx_list, t0_pose, t1_pose);
-    const std::vector<geometry_msgs::msg::Vector3Stamped> gyro_sub_traj =
-      extract_sub_trajectory(gyro_list, t0_pose, t1_pose);
-    const size_t n_twist = vx_sub_traj.size();
+    // const std::vector<tier4_debug_msgs::msg::Float64Stamped> vx_sub_traj =
+    //   extract_sub_trajectory(vx_list, t0_pose, t1_pose);
+    // const std::vector<geometry_msgs::msg::Vector3Stamped> gyro_sub_traj =
+    //   extract_sub_trajectory(gyro_list, t0_pose, t1_pose);
+    const auto vx_sub_traj = extract_synchronized_pose_and_twist(pose_sub_list, vx_list);
+    const auto gyro_sub_traj = extract_synchronized_pose_and_twist(pose_sub_list, gyro_list);
+    const size_t n_twist = vx_sub_traj.twist_list.size();
 
-    if (get_mean_abs_vx(vx_sub_traj) < vx_threshold) continue;
-    if (get_mean_abs_wz(gyro_sub_traj) > wz_threshold) continue;
+    if (get_mean_abs_vx(vx_sub_traj.twist_list) < vx_threshold) continue;
+    if (get_mean_abs_wz(gyro_sub_traj.twist_list) > wz_threshold) continue;
 
     const double distance =
-      norm_xy(pose_sub_traj.front().pose.position, pose_sub_traj.back().pose.position);
+      norm_xy(vx_sub_traj.pose_start.pose.position, vx_sub_traj.pose_end.pose.position);
     const auto d_pos = integrate_position(
-      vx_sub_traj, gyro_sub_traj, coef_vx, tf2::getYaw(pose_sub_traj.front().pose.orientation));
+      vx_sub_traj.twist_list, gyro_sub_traj.twist_list, coef_vx, tf2::getYaw(vx_sub_traj.pose_start.pose.orientation));
 
     const double distance_from_twist = std::sqrt(d_pos.x * d_pos.x + d_pos.y * d_pos.y);
     const double delta = std::sqrt(n_twist / t_window) * (distance - distance_from_twist);
@@ -207,7 +238,9 @@ void DeviationEstimator::callback_imu(const sensor_msgs::msg::Imu::ConstSharedPt
   geometry_msgs::msg::Vector3Stamped gyro;
   gyro.header.stamp = imu_msg_ptr->header.stamp;
   gyro.vector = transform_vector3(imu_msg_ptr->angular_velocity, *tf_imu2base_ptr);
-
+  //////////////////KOJI
+  // gyro.vector.z *= 1.02;
+  ///////////////////////
   gyro_all_.push_back(gyro);
 }
 
@@ -245,7 +278,7 @@ void DeviationEstimator::timer_callback()
       this->get_logger(),
       "[Deviation Estimator] coef_vx estimation is not updated since the vehicle is not moving.");
   }
-  gyro_bias_module_->update_bias(pose_buf_, gyro_buf, t1 - t0);
+  gyro_bias_module_->update_bias(pose_buf_.front(), pose_buf_.back(), gyro_buf, t1 - t0);
   pose_buf_.clear();
 
   if (vel_coef_module_->empty() | gyro_bias_module_->empty()) return;
