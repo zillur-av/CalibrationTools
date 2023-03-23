@@ -5,6 +5,8 @@
   <arg name="camera_name" default=""/>
   <arg name="rviz" default="false"/>
 
+
+
   <group>
     <push-ros-namespace namespace="sensor_kit"/>
     <include file="$(find-pkg-share extrinsic_calibration_manager)/launch/$(var sensor_model)/tag_based_sensor_kit.launch.xml">
