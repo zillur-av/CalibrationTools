@@ -50,13 +50,11 @@
       </include>
     </group>
 
-
-
-<include file="$(find-pkg-share extrinsic_calibration_manager)/launch/$(var sensor_model)/tag_based.launch.xml">
-        <arg name="vehicle_id" value="$(var vehicle_id)"/>
-        <arg name="camera_name" value="$(var camera_name)"/>
-        <arg name="rviz" value="$(var calibration_rviz)"/>
-      </include>
+    <include file="$(find-pkg-share extrinsic_calibration_manager)/launch/$(var sensor_model)/tag_based.launch.xml">
+      <arg name="vehicle_id" value="$(var vehicle_id)"/>
+      <arg name="camera_name" value="$(var camera_name)"/>
+      <arg name="rviz" value="$(var calibration_rviz)"/>
+    </include>
 
     <group if="$(eval &quot;'$(var mode)' == 'interactive' &quot;)">
       <include file="$(find-pkg-share extrinsic_calibration_manager)/launch/$(var sensor_model)/interactive.launch.xml">
@@ -73,6 +71,13 @@
         <arg name="map_path" value="$(var map_path)"/>
         <arg name="pointcloud_map_file" value="$(var pointcloud_map_file)"/>
         <arg name="map_calibration_area_file" value="$(var map_calibration_area_file)"/>
+      </include>
+    </group>
+
+    <group if="$(eval &quot;'$(var mode)' == 'lidar_to_lidar_2d' &quot;)">
+      <include file="$(find-pkg-share extrinsic_calibration_manager)/launch/$(var sensor_model)/lidar_to_lidar_2d.launch.xml">
+        <arg name="vehicle_id" value="$(var vehicle_id)"/>
+        <arg name="rviz" value="$(var calibration_rviz)"/>
       </include>
     </group>
 

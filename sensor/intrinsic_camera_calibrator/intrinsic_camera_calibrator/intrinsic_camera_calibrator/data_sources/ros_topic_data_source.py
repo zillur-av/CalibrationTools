@@ -89,7 +89,7 @@ class RosTopicDataSource(DataSource, Node):
                 reliability=reliability,
                 durability=durability,
                 history=rclpy.qos.HistoryPolicy.KEEP_LAST,
-                depth=1
+                depth=1,
             )
 
             for image_type in topics_dict[image_topic]:
