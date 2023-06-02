@@ -8,10 +8,14 @@
   <arg name="rviz"/>
 
   <!-- we do not use the standard image_raw name to avoid naming conflicts -->
-  <let name="image_decompressed_topic" value="/sensing/camera/$(var camera_name)/image_raw/decompressed"/>
+  <let name="image_decompressed_topic" value="/sensing/camera/$(var camera_name)/image_rect_color/decompressed"/>
+  <let name="image_decompressed_topic" value="/sensing/camera/$(var camera_name)/image_raw/decompressed" if="$(eval &quot;'$(var camera_name)' == 'camera6' &quot;)"/>
+  <let name="image_decompressed_topic" value="/sensing/camera/$(var camera_name)/image_raw/decompressed" if="$(eval &quot;'$(var camera_name)' == 'camera7' &quot;)"/>
   <let name="image_decompressed_topic" value="/sensing/camera/traffic_light/image_raw/decompressed" if="$(eval &quot;'$(var camera_name)' == 'traffic_light_left_camera' &quot;)"/>
 
-  <let name="image_compressed_topic" value="/sensing/camera/$(var camera_name)/image_raw/compressed"/>
+  <let name="image_compressed_topic" value="/sensing/camera/$(var camera_name)/image_rect_color/compressed"/>
+  <let name="image_compressed_topic" value="/sensing/camera/$(var camera_name)/image_raw/compressed" if="$(eval &quot;'$(var camera_name)' == 'camera6' &quot;)"/>
+  <let name="image_compressed_topic" value="/sensing/camera/$(var camera_name)/image_raw/compressed" if="$(eval &quot;'$(var camera_name)' == 'camera7' &quot;)"/>
   <let name="image_compressed_topic" value="/sensing/camera/traffic_light/image_raw/compressed" if="$(eval &quot;'$(var camera_name)' == 'traffic_light_left_camera' &quot;)"/>
 
   <let name="camera_info_topic" value="/sensing/camera/$(var camera_name)/camera_info"/>
@@ -120,10 +124,20 @@
   </group>
 
   <node pkg="tf2_ros" exec="static_transform_publisher" name="estimated_base_link_broadcaster" output="screen" args="0 0 0 0 0 0 sensor_kit_base_link camera6/camera_link"/>
-  <node pkg="tf2_ros" exec="static_transform_publisher" name="estimated_base_link_broadcaster" output="screen" args="--x 0.0 --y 0.0 --z 0.0 --qx 0.5 --qy -0.5 --qz 0.5 --qw -0.5 --frame-id camera6/camera_link --child-frame-id camera6/camera_optical_link"/>
+  <node
+    pkg="tf2_ros"
+    exec="static_transform_publisher"
+    name="estimated_base_link_broadcaster"
+    output="screen"
+    args="--x 0.0 --y 0.0 --z 0.0 --qx 0.5 --qy -0.5 --qz 0.5 --qw -0.5 --frame-id camera6/camera_link --child-frame-id camera6/camera_optical_link"
+  />
 
   <node pkg="tf2_ros" exec="static_transform_publisher" name="estimated_base_link_broadcaster" output="screen" args="0 0 0 0 0 0 sensor_kit_base_link camera7/camera_link"/>
-  <node pkg="tf2_ros" exec="static_transform_publisher" name="estimated_base_link_broadcaster" output="screen" args="--x 0.0 --y 0.0 --z 0.0 --qx 0.5 --qy -0.5 --qz 0.5 --qw -0.5 --frame-id camera7/camera_link --child-frame-id camera7/camera_optical_link"/>
-
-
+  <node
+    pkg="tf2_ros"
+    exec="static_transform_publisher"
+    name="estimated_base_link_broadcaster"
+    output="screen"
+    args="--x 0.0 --y 0.0 --z 0.0 --qx 0.5 --qy -0.5 --qz 0.5 --qw -0.5 --frame-id camera7/camera_link --child-frame-id camera7/camera_optical_link"
+  />
 </launch>
