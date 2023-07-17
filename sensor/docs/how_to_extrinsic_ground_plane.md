@@ -4,6 +4,14 @@
 
 This calibration method is based on the premise that the vehicle is placed on a regular surface so that it forms a plane, with as few objects as possible on the floor. The lidar subject to calibration must observe as much of the ground plane as possible for this method to obtain a accurate calibration.
 
+## Install
+use `ground_plane_redesign` branch for base_link to lidar calibration by running `git checkout ground_plane_redesign`.
+To detect the ground plane, you have to play with some parameters like here https://github.com/zillur-av/CalibrationTools/blob/9ab8e81b8a67bbb7bb308cefcd5afc47c05dfbbc/sensor/extrinsic_ground_plane_calibrator/launch/calibrator.launch.xml#L16C1-L18C63 depending on your sensors and ground surface.
+
+# What you need
+1. Sensor_msgs/Pointcloud2
+2. initial tf between base_link and lidar
+
 ## 2. Capture rosbag
 
 Capture a rosbag including lidar subject to calibration. The duration is arbitrary, but at least a few seconds are required.
@@ -35,14 +43,14 @@ To launch the extrinsic ground-plane calibration tool, use the following command
 
 ```sh
 ros2 launch extrinsic_calibration_manager calibration.launch.xml \
-  mode:=ground_plane sensor_model:=<sensor_model> vehicle_model:=<vehicle_model> vehicle_id:=<vehicle_id>
+  mode:=ground_plane sensor_model:=<sensor_model> vehicle_model:=<vehicle_model> vehicle_id:=<vehicle_id> logging_simulator:=false
 ```
 
 For example,
 
 ```sh
 ros2 launch extrinsic_calibration_manager calibration.launch.xml \
-  mode:=ground_plane sensor_model:=aip_x1 vehicle_model:=lexus vehicle_id:=my_awesome_vehicle
+  mode:=ground_plane sensor_model:=aip_x1 vehicle_model:=lexus vehicle_id:=my_awesome_vehicle logging_simulator:=false
 ```
 
 Then, play the recorded calibration rosbag (on terminal 2).
